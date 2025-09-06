@@ -1,0 +1,1 @@
+- **2x (FIN 264 R) The Masamune** *(3, equipment that doubles death triggers)*

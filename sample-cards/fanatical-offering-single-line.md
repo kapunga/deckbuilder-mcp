@@ -1,0 +1,1 @@
+- **3x (LCI 105 C) Fanatical Offering** *(1B, sacrifice for card draw + Map token)*

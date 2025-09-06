@@ -1,0 +1,1 @@
+- **1x (JMP 169 R) Rhystic Study** *(2U, draw cards unless opponents pay 1)*

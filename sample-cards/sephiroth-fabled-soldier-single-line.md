@@ -1,0 +1,1 @@
+- **2x (FIN 115 M) Sephiroth, Fabled SOLDIER // Sephiroth, One-Winged Angel**
