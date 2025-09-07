@@ -16,6 +16,9 @@ import org.http4s.headers.`User-Agent`
 import org.http4s.ProductId
 import org.http4s.Uri
 import io.circe.Decoder
+import io.circe.HCursor
+import org.http4s.Response
+import org.http4s.Status
 
 class ScryfallService(client: Client[IO]):
   val DeckBuilderProductId = ProductId("Deck Builder MCP", "v0.1.0-SNAPSHOT".some)
@@ -33,7 +36,7 @@ class ScryfallService(client: Client[IO]):
   protected def callScryfall[A: Decoder](uri: Uri): IO[A] =
     val req = scryFallRequest(uri)
 
-    client.expect[A](req)
+    client.expectOr[A](req)(processError)
 
   protected def scryFallRequest(uri: Uri): Request[IO] =
     Request[IO](
@@ -44,3 +47,30 @@ class ScryfallService(client: Client[IO]):
         `User-Agent`(DeckBuilderProductId)
       )
     )
+
+  protected def processError(response: Response[IO]): IO[Throwable] = 
+    response.as[ScryfallApiError].map(err => {
+      if (err.status == Status.NotFound) {
+        if (err.`type`.contains("ambiguous")) ScryfallError.Ambiguous(err.details)
+        else ScryfallError.NotFound(err.details)
+      } else {
+        ScryfallError.Generic(err.status.code, err.details)
+      }
+    })
+
+protected case class ScryfallApiError(
+  `object`: String,
+  code: String,
+  `type`: Option[String],
+  status: Status,
+  details: String)
+
+protected object ScryfallApiError:
+  given Decoder[ScryfallApiError] = (hc: HCursor) =>
+    for {
+      obj <- hc.downField("object").as[String]
+      code <- hc.downField("code").as[String]
+      t <- hc.downField("type").as[Option[String]]
+      status <- hc.downField("status").as[Int].map(Status(_))
+      details <- hc.downField("details").as[String]
+    } yield ScryfallApiError(obj, code, t, status, details)
