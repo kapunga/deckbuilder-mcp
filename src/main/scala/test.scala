@@ -1,10 +1,16 @@
 import dbmcp.*
+import dbmcp.service.ScryfallService
 import cats.implicits.*
 import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import org.http4s.ember.client.EmberClientBuilder
 
-def lookupById(set: String, num: Int): String =
+def lookupById(setId: SetId, setNum: SetNum): String =
   EmberClientBuilder.default[IO].build.use({ client =>
-    ScryfallService(client).findBySet(set, num)  
+    ScryfallService(client).findBySet(setId, setNum)  
+  }).unsafeRunSync().show
+
+def lookupByName(name: String, setId: Option[SetId] = None, exact: Boolean = false): String =
+  EmberClientBuilder.default[IO].build.use({ client =>
+    ScryfallService(client).findByName(name, setId, exact)  
   }).unsafeRunSync().show

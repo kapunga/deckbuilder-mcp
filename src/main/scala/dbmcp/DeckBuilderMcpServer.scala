@@ -8,6 +8,7 @@ import ch.linkyard.mcp.server.McpServer
 import ch.linkyard.mcp.server.McpServer.Client
 import ch.linkyard.mcp.server.McpServer.ConnectionInfo
 import ch.linkyard.mcp.server.ToolFunction
+import dbmcp.service.ScryfallService
 import org.http4s.client.Client as HttpClient
 import org.http4s.ember.client.EmberClientBuilder
 import ch.linkyard.mcp.server.ToolFunction.Effect
@@ -31,7 +32,8 @@ private class DeckBuilderSession(
 
   override def instructions: IO[Option[String]] = None.pure
 
-  override val tools: IO[List[ToolFunction[IO]]] = List(findBySetTool(scryfallService)).pure
+  override val tools: IO[List[ToolFunction[IO]]] =
+    List(findBySetTool(scryfallService), findByNameTool(scryfallService)).pure
 
 private case class FindBySetInput(setId: SetId, setNum: SetNum)
 
@@ -45,4 +47,18 @@ private def findBySetTool(scryfallService: ScryfallService): ToolFunction[IO] =
       isOpenWorld = true    
     ),
     f = (fbsi, _) => scryfallService.findBySet(fbsi.setId, fbsi.setNum).map(_.show)
+  )
+
+private case class FindByNameInput(name: String, setId: Option[SetId], exact: Boolean = false)
+
+private def findByNameTool(scryfallService: ScryfallService): ToolFunction[IO] =
+  ToolFunction.text[IO, FindByNameInput](
+    info = ToolFunction.Info(
+      name = "find_card_by_name",
+      title = "Find Card By Name".some,
+      description = "Searches Scryfall for an MtG card by name. Set code for narrowing down results is optional. If exact match is set, will look for an exact match, otherwise the search will be fuzzy.".some,
+      effect = Effect.ReadOnly,
+      isOpenWorld = true
+    ),
+    f = (fbni, _) => scryfallService.findByName(fbni.name, fbni.setId, fbni.exact).map(_.show)
   )

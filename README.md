@@ -6,6 +6,7 @@ An MCP server aimed at making deck building with a foundation model delightful.
 
 ## Current tools
 - `find_card_by_set` - Searches Scryfall for an MtG card by Set Code and Collection Number
+- `find_card_by_name` - Searches Scryfall for an MtG card by Name
 
 ## Use with Claude
 To use it, check out the repo, run `sbt assembly` to build the project.
