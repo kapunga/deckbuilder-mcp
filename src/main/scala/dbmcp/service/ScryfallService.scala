@@ -14,32 +14,33 @@ import org.http4s.headers.Accept
 import org.http4s.implicits.*
 import org.http4s.headers.`User-Agent`
 import org.http4s.ProductId
+import org.http4s.Uri
+import io.circe.Decoder
 
 class ScryfallService(client: Client[IO]):
   val DeckBuilderProductId = ProductId("Deck Builder MCP", "v0.1.0-SNAPSHOT".some)
 
-  def findByName(name: String, setId: Option[SetId], exact: Boolean = false): IO[Card] =
-    val uri = uri"https://api.scryfall.com/cards/named" +? (if (exact) "exact" else "fuzzy", name)
+  def findByName(name: String, setId: Option[SetId], exact: Boolean): IO[Card] =
+    val uri = ScryfallUris.findByName(name, setId, exact)
 
-    val request = Request[IO](
-      method = Method.GET,
-      uri = setId.fold(uri)(set => uri +? ("set", set)),
-      headers = Headers(
-        Accept(MediaType.application.json),
-        `User-Agent`(DeckBuilderProductId)
-        )
-      )
-
-    client.expect[Card](request)
+    callScryfall(uri)
 
   def findBySet(setId: SetId, setNum: SetNum): IO[Card] =
-    val request = Request[IO](
+    val uri = ScryfallUris.findBySet(setId, setNum)
+
+    callScryfall(uri)
+
+  protected def callScryfall[A: Decoder](uri: Uri): IO[A] =
+    val req = scryFallRequest(uri)
+
+    client.expect[A](req)
+
+  protected def scryFallRequest(uri: Uri): Request[IO] =
+    Request[IO](
       method = Method.GET,
-      uri = uri"https://api.scryfall.com/cards" / setId / setNum,
+      uri = uri,
       headers = Headers(
         Accept(MediaType.application.json),
         `User-Agent`(DeckBuilderProductId)
       )
     )
-
-    client.expect[Card](request)
