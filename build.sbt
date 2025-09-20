@@ -1,5 +1,8 @@
 ThisBuild / version := "0.1.0-SNAPSHOT"
 ThisBuild / scalaVersion := "3.7.1"
+ThisBuild / organizationName := "Paul (Thor) Thordarson"
+ThisBuild / startYear := Some(2025)
+ThisBuild / licenses := List("MIT" -> url("https://opensource.org/license/mit"))
 ThisBuild / semanticdbEnabled := true
 ThisBuild / semanticdbVersion := scalafixSemanticdb.revision
 
@@ -30,4 +33,9 @@ lazy val root = (project in file("."))
       "org.scalameta" %% "munit" % "1.0.3" % Test
     )
   )
+
+addCommandAlias(
+  "formatAll",
+  "scalafmtAll; scalafixAll; headerCreateAll"
+)
 
