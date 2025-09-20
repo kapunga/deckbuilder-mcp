@@ -1,8 +1,7 @@
 package dbmcp
 
-import io.circe.{Decoder, HCursor, JsonObject, DecodingFailure}
-import cats.syntax.traverse.*
-import cats.syntax.either.*
+import cats.syntax.traverse._
+import io.circe._
 
 enum MtgFormat(val name: String):
   case Standard extends MtgFormat("standard")
@@ -38,20 +37,28 @@ opaque type Legalities = Long
 
 object Legalities:
   def apply(formatMap: Map[MtgFormat, Legality]): Legalities =
-    formatMap.map((f, l) => l.ordinal.toLong << (f.ordinal * 2))
+    formatMap
+      .map((f, l) => l.ordinal.toLong << (f.ordinal * 2))
       .foldLeft(0L)(_ | _)
 
   given Decoder[Legalities] = (c: HCursor) =>
     for {
       jsonObject <- c.as[JsonObject]
-      formatMap <- jsonObject.toMap.toList.traverse { case (formatName, legalityJson) =>
-        for {
-          legalityString <- legalityJson.as[String]
-          format <- MtgFormat.values.find(_.name == formatName)
-                     .toRight(DecodingFailure(s"Unknown format: $formatName", c.history))
-          legality <- Legality.values.find(_.name == legalityString)
-                       .toRight(DecodingFailure(s"Unknown legality: $legalityString", c.history))
-        } yield format -> legality
+      formatMap <- jsonObject.toMap.toList.traverse {
+        case (formatName, legalityJson) =>
+          for {
+            legalityString <- legalityJson.as[String]
+            format <- MtgFormat.values
+              .find(_.name == formatName)
+              .toRight(
+                DecodingFailure(s"Unknown format: $formatName", c.history)
+              )
+            legality <- Legality.values
+              .find(_.name == legalityString)
+              .toRight(
+                DecodingFailure(s"Unknown legality: $legalityString", c.history)
+              )
+          } yield format -> legality
       }
     } yield Legalities(formatMap.toMap)
 

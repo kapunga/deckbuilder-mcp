@@ -1,12 +1,11 @@
 package dbmcp.tools
 
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import ch.linkyard.mcp.server.ToolFunction
-import dbmcp.SetId
-import dbmcp.service.ScryfallService
 import ch.linkyard.mcp.server.ToolFunction.Effect
 import com.melvinlow.json.schema.generic.auto.given
+import dbmcp.service.ScryfallService
 import io.circe.generic.auto.given
 
 object FindByIdTool extends ToolHelper:
@@ -22,7 +21,8 @@ object FindByIdTool extends ToolHelper:
         isOpenWorld = true
       ),
       f = (fbii, _) =>
-        scryfallService.findById(fbii.scryfallId)
+        scryfallService
+          .findById(fbii.scryfallId)
           .map(_.show)
           .handleErrorWith(ex => IO.raiseError(toMcpError(ex)))
     )

@@ -8,7 +8,7 @@ enum Color(val ch: Char, val flag: Int):
   case Green extends Color('G', 0b10000)
 
 enum ColorCombo(val colors: Set[Color]):
-  override def toString(): String = colors.map(_.ch).mkString 
+  override def toString(): String = colors.map(_.ch).mkString
   def flags: Int = colors.map(_.flag).fold(0)(_ | _)
 
   case Colorless extends ColorCombo(Set.empty)
@@ -37,12 +37,20 @@ enum ColorCombo(val colors: Set[Color]):
   case Sultai extends ColorCombo(Set(Color.Black, Color.Green, Color.Blue))
   case Mardu extends ColorCombo(Set(Color.Red, Color.White, Color.Black))
   case Temur extends ColorCombo(Set(Color.Green, Color.Red, Color.Blue))
-  case Chaos extends ColorCombo(Set(Color.Blue, Color.Black, Color.Red, Color.Green))
-  case Aggression extends ColorCombo(Set(Color.Black, Color.Red, Color.Green, Color.White))
-  case Altruism extends ColorCombo(Set(Color.Red, Color.Green, Color.White, Color.Blue))
-  case Growth extends ColorCombo(Set(Color.Green, Color.White, Color.Blue, Color.Black))
-  case Artifice extends ColorCombo(Set(Color.White, Color.Blue, Color.Black, Color.Red))
-  case Domain extends ColorCombo(Set(Color.White, Color.Blue, Color.Black, Color.Red, Color.Green))
+  case Chaos
+      extends ColorCombo(Set(Color.Blue, Color.Black, Color.Red, Color.Green))
+  case Aggression
+      extends ColorCombo(Set(Color.Black, Color.Red, Color.Green, Color.White))
+  case Altruism
+      extends ColorCombo(Set(Color.Red, Color.Green, Color.White, Color.Blue))
+  case Growth
+      extends ColorCombo(Set(Color.Green, Color.White, Color.Blue, Color.Black))
+  case Artifice
+      extends ColorCombo(Set(Color.White, Color.Blue, Color.Black, Color.Red))
+  case Domain
+      extends ColorCombo(
+        Set(Color.White, Color.Blue, Color.Black, Color.Red, Color.Green)
+      )
 
 object ColorCombo:
   lazy val stringMap: Map[String, ColorCombo] =

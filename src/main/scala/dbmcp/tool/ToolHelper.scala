@@ -1,9 +1,9 @@
 package dbmcp.tools
 
-import ch.linkyard.mcp.server.McpError
 import ch.linkyard.mcp.jsonrpc2.JsonRpc.ErrorCode
-import dbmcp.service.ScryfallError
+import ch.linkyard.mcp.server.McpError
 import ch.linkyard.mcp.server.McpError.McpErrorException
+import dbmcp.service.ScryfallError
 
 trait ToolHelper:
   def toMcpError(t: Throwable): McpErrorException = t match {
@@ -16,7 +16,8 @@ trait ToolHelper:
     case t =>
       McpError.error(
         ErrorCodes.Throwable,
-        s"Internal Error: ${t.getClass().getCanonicalName()} - ${t.getMessage()}")
+        s"Internal Error: ${t.getClass().getCanonicalName()} - ${t.getMessage()}"
+      )
   }
 
 object ErrorCodes:

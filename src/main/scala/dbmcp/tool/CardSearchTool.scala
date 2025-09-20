@@ -1,12 +1,11 @@
 package dbmcp.tools
 
 import cats.effect.IO
-import cats.syntax.all.*
+import cats.syntax.all._
 import ch.linkyard.mcp.server.ToolFunction
-import dbmcp.SetId
-import dbmcp.service.ScryfallService
 import ch.linkyard.mcp.server.ToolFunction.Effect
 import com.melvinlow.json.schema.generic.auto.given
+import dbmcp.service.ScryfallService
 import io.circe.generic.auto.given
 
 object CardSearchTool extends ToolHelper:
@@ -26,7 +25,8 @@ object CardSearchTool extends ToolHelper:
         isOpenWorld = true
       ),
       f = (csi, _) =>
-        scryfallService.search(csi.searchTerm, csi.limit)
+        scryfallService
+          .search(csi.searchTerm, csi.limit)
           .map(_.map(_.show).mkString("\n\n=====\n\n"))
           .handleErrorWith(ex => IO.raiseError(toMcpError(ex)))
     )

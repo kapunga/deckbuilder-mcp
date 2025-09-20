@@ -1,20 +1,18 @@
 package dbmcp
 
 import cats.Show
-import cats.syntax.show.*
-import io.circe.Decoder
-import io.circe.Json
-import io.circe.HCursor
+import cats.syntax.show._
+import io.circe.{Decoder, HCursor}
 
 case class CardFace(
-  faceType: String,
-  name: String,
-  manaCost: String,
-  typeLine: String,
-  text: String,
-  colors: List[String],
-  power: Option[String],
-  toughness: Option[String]
+    faceType: String,
+    name: String,
+    manaCost: String,
+    typeLine: String,
+    text: String,
+    colors: List[String],
+    power: Option[String],
+    toughness: Option[String]
 )
 
 object CardFace:
@@ -33,36 +31,42 @@ object CardFace:
 
   given Decoder[CardFace] = (c: HCursor) =>
     for {
-      faceType <- c.downField("object").as[String]
-                  .map(ft => if (ft == "card") "card_face" else ft)
+      faceType <- c
+        .downField("object")
+        .as[String]
+        .map(ft => if (ft == "card") "card_face" else ft)
       name <- c.downField("name").as[String]
       manaCost <- c.downField("mana_cost").as[String]
       typeLine <- c.downField("type_line").as[String]
       text <- c.downField("oracle_text").as[String]
-      colors <- c.downField("colors").as[Option[List[String]]]
-                .map(_.getOrElse(List.empty))
+      colors <- c
+        .downField("colors")
+        .as[Option[List[String]]]
+        .map(_.getOrElse(List.empty))
       power <- c.downField("power").as[Option[String]]
       toughness <- c.downField("toughness").as[Option[String]]
     } yield CardFace(
-        faceType,
-        name,
-        manaCost,
-        typeLine,
-        text,
-        colors,
-        power,
-        toughness)
+      faceType,
+      name,
+      manaCost,
+      typeLine,
+      text,
+      colors,
+      power,
+      toughness
+    )
 
 case class Card(
-  scryfallId: String,
-  name: String,
-  layout: String,
-  typeLine: String,
-  colorIdentity: List[String],
-  cardFaces: List[CardFace])
+    scryfallId: String,
+    name: String,
+    layout: String,
+    typeLine: String,
+    colorIdentity: List[String],
+    cardFaces: List[CardFace]
+)
 
 object Card:
-  given Show[Card] = (c: Card) => 
+  given Show[Card] = (c: Card) =>
     if (c.cardFaces.size == 1) c.cardFaces.head.show
     else {
       val front = c.cardFaces.head
@@ -83,17 +87,10 @@ object Card:
       typeLine <- h.downField("type_line").as[String]
       colorIdentity <- h.downField("color_identity").as[List[String]]
       cardFaces <- parseFaces(layout, h)
-    } yield Card(
-      scryfallId,
-      name,
-      layout,
-      typeLine,
-      colorIdentity,
-      cardFaces)
+    } yield Card(scryfallId, name, layout, typeLine, colorIdentity, cardFaces)
 
   def parseFaces(layout: String, hc: HCursor): Decoder.Result[List[CardFace]] =
     if (hc.keys.exists(_.exists(_ == "card_faces")))
       hc.downField("card_faces").as[List[CardFace]]
     else
       hc.as[CardFace].map(List(_))
-

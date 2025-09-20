@@ -7,4 +7,3 @@ enum Mana(symbol: String):
   case Red extends Mana("R")
   case Green extends Mana("G")
   case Colorless extends Mana("C")
-

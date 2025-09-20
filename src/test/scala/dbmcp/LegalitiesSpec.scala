@@ -1,12 +1,11 @@
 package dbmcp
 
-import org.scalatest.flatspec.AnyFlatSpec
-import org.scalatest.matchers.should.Matchers
-import io.circe.parser.*
+import io.circe.parser._
+import munit.FunSuite
 
-class LegalitiesSpec extends AnyFlatSpec with Matchers:
+class LegalitiesSpec extends FunSuite:
 
-  "Legalities bit-packing" should "round-trip correctly" in {
+  test("Legalities bit-packing round-trip correctly") {
     val formatMap = Map(
       MtgFormat.Standard -> Legality.Legal,
       MtgFormat.Modern -> Legality.NotLegal,
@@ -17,21 +16,21 @@ class LegalitiesSpec extends AnyFlatSpec with Matchers:
     val legalities = Legalities(formatMap)
     val roundTripped = legalities.toFormatMap
 
-    roundTripped(MtgFormat.Standard) shouldBe Legality.Legal
-    roundTripped(MtgFormat.Modern) shouldBe Legality.NotLegal
-    roundTripped(MtgFormat.Legacy) shouldBe Legality.Restricted
-    roundTripped(MtgFormat.Vintage) shouldBe Legality.Banned
+    assertEquals(roundTripped(MtgFormat.Standard), Legality.Legal)
+    assertEquals(roundTripped(MtgFormat.Modern), Legality.NotLegal)
+    assertEquals(roundTripped(MtgFormat.Legacy), Legality.Restricted)
+    assertEquals(roundTripped(MtgFormat.Vintage), Legality.Banned)
   }
 
-  it should "handle individual format retrieval correctly" in {
+  test("handle individual format retrieval correctly") {
     val formatMap = Map(MtgFormat.Commander -> Legality.Banned)
     val legalities = Legalities(formatMap)
 
-    legalities.legalityFor(MtgFormat.Commander) shouldBe Legality.Banned
-    legalities.legalityFor(MtgFormat.Standard) shouldBe Legality.Legal // default
+    assertEquals(legalities.legalityFor(MtgFormat.Commander), Legality.Banned)
+    assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal) // default
   }
 
-  it should "handle mixed legalities correctly" in {
+  test("handle mixed legalities correctly") {
     val formatMap = Map(
       MtgFormat.Standard -> Legality.Legal,
       MtgFormat.Pioneer -> Legality.Legal,
@@ -44,25 +43,25 @@ class LegalitiesSpec extends AnyFlatSpec with Matchers:
 
     val legalities = Legalities(formatMap)
 
-    legalities.legalityFor(MtgFormat.Standard) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Pioneer) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Modern) shouldBe Legality.NotLegal
-    legalities.legalityFor(MtgFormat.Legacy) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Vintage) shouldBe Legality.Restricted
-    legalities.legalityFor(MtgFormat.Commander) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Pauper) shouldBe Legality.Banned
+    assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Pioneer), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Modern), Legality.NotLegal)
+    assertEquals(legalities.legalityFor(MtgFormat.Legacy), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Vintage), Legality.Restricted)
+    assertEquals(legalities.legalityFor(MtgFormat.Commander), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Pauper), Legality.Banned)
   }
 
-  it should "handle empty map correctly" in {
+  test("handle empty map correctly") {
     val legalities = Legalities(Map.empty)
 
     // All formats should default to Legal (ordinal 0)
     MtgFormat.values.foreach { format =>
-      legalities.legalityFor(format) shouldBe Legality.Legal
+      assertEquals(legalities.legalityFor(format), Legality.Legal)
     }
   }
 
-  it should "handle bit manipulation edge cases" in {
+  test("handle bit manipulation edge cases") {
     // Test all legalities for first format (should be in least significant bits)
     val testCases = Seq(
       (MtgFormat.Standard, Legality.Legal),
@@ -74,11 +73,11 @@ class LegalitiesSpec extends AnyFlatSpec with Matchers:
     testCases.foreach { case (format, legality) =>
       val formatMap = Map(format -> legality)
       val legalities = Legalities(formatMap)
-      legalities.legalityFor(format) shouldBe legality
+      assertEquals(legalities.legalityFor(format), legality)
     }
   }
 
-  "Legalities Circe decoder" should "parse valid Scryfall JSON correctly" in {
+  test("parse valid Scryfall JSON correctly") {
     val json = """{
       "standard": "legal",
       "future": "legal",
@@ -104,61 +103,65 @@ class LegalitiesSpec extends AnyFlatSpec with Matchers:
     }"""
 
     val result = parse(json).flatMap(_.as[Legalities])
-    result.isRight shouldBe true
+    assert(result.isRight)
 
     val legalities = result.getOrElse(fail("Failed to parse JSON"))
-    legalities.legalityFor(MtgFormat.Standard) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Pauper) shouldBe Legality.NotLegal
-    legalities.legalityFor(MtgFormat.Penny) shouldBe Legality.NotLegal
-    legalities.legalityFor(MtgFormat.Commander) shouldBe Legality.Legal
+    assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Pauper), Legality.NotLegal)
+    assertEquals(legalities.legalityFor(MtgFormat.Penny), Legality.NotLegal)
+    assertEquals(legalities.legalityFor(MtgFormat.Commander), Legality.Legal)
   }
 
-  it should "fail gracefully with unknown format" in {
+  test("fail gracefully with unknown format") {
     val json = """{
       "standard": "legal",
       "unknown_format": "legal"
     }"""
 
     val result = parse(json).flatMap(_.as[Legalities])
-    result.isLeft shouldBe true
-    result.left.map(_.getMessage should include("Unknown format: unknown_format"))
+    assert(result.isLeft)
+    result.left.foreach { error =>
+      assert(error.getMessage.contains("Unknown format: unknown_format"))
+    }
   }
 
-  it should "fail gracefully with unknown legality" in {
+  test("fail gracefully with unknown legality") {
     val json = """{
       "standard": "super_legal",
       "modern": "legal"
     }"""
 
     val result = parse(json).flatMap(_.as[Legalities])
-    result.isLeft shouldBe true
-    result.left.map(_.getMessage should include("Unknown legality: super_legal"))
+    assert(result.isLeft)
+    result.left.foreach { error =>
+      assert(error.getMessage.contains("Unknown legality: super_legal"))
+    }
   }
 
-  it should "handle partial JSON correctly" in {
+  test("handle partial JSON correctly") {
     val json = """{
       "standard": "legal",
       "modern": "not_legal"
     }"""
 
     val result = parse(json).flatMap(_.as[Legalities])
-    result.isRight shouldBe true
+    assert(result.isRight)
 
     val legalities = result.getOrElse(fail("Failed to parse JSON"))
-    legalities.legalityFor(MtgFormat.Standard) shouldBe Legality.Legal
-    legalities.legalityFor(MtgFormat.Modern) shouldBe Legality.NotLegal
-    legalities.legalityFor(MtgFormat.Legacy) shouldBe Legality.Legal // default
+    assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal)
+    assertEquals(legalities.legalityFor(MtgFormat.Modern), Legality.NotLegal)
+    assertEquals(legalities.legalityFor(MtgFormat.Legacy), Legality.Legal) // default
   }
 
-  it should "handle empty JSON object" in {
+  test("handle empty JSON object") {
     val json = "{}"
 
     val result = parse(json).flatMap(_.as[Legalities])
-    result.isRight shouldBe true
+    assert(result.isRight)
 
     val legalities = result.getOrElse(fail("Failed to parse JSON"))
     // All formats should default to Legal
     MtgFormat.values.foreach { format =>
-      legalities.legalityFor(format) shouldBe Legality.Legal
+      assertEquals(legalities.legalityFor(format), Legality.Legal)
     }
   }
