@@ -6,9 +6,10 @@ import ch.linkyard.mcp.protocol.Initialize.PartyInfo
 import ch.linkyard.mcp.server.{McpServer, ToolFunction}
 import ch.linkyard.mcp.server.McpServer.{Client, ConnectionInfo}
 import dbmcp.service.ScryfallService
-import dbmcp.tools.{FindByNameTool, FindBySetTool}
+import dbmcp.tools.*
 import org.http4s.client.Client as HttpClient
 import org.http4s.ember.client.EmberClientBuilder
+import dbmcp.tools.CardSearchTool
 
 class DeckBuilderMcpServer extends McpServer[IO]:
   override def initialize(client: Client[IO], info: ConnectionInfo[IO]): Resource[IO, McpServer.Session[IO]] =
@@ -29,6 +30,8 @@ private class DeckBuilderSession(
 
   override val tools: IO[List[ToolFunction[IO]]] =
     List(
-      FindBySetTool(scryfallService),
-      FindByNameTool(scryfallService)
+      CardSearchTool(scryfallService),
+      FindByIdTool(scryfallService),
+      FindByNameTool(scryfallService),
+      FindBySetTool(scryfallService)
     ).pure

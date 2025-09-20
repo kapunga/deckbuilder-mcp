@@ -40,6 +40,11 @@ class ScryfallService(client: Client[IO]):
 
     callScryfall(uri)
 
+  def search(query: String, limit: Int = 20): IO[List[Card]] =
+    val initialUri = ScryfallUris.search(query)
+
+    pagedScryFallResult[Card](initialUri, limit).map(_._1)
+
   protected def callScryfall[A: Decoder](uri: Uri): IO[A] =
     val req = scryFallRequest(uri)
 
@@ -47,6 +52,7 @@ class ScryfallService(client: Client[IO]):
 
   protected def pagedScryFallResult[A: Decoder](
     uri: Uri,
+    limit: Int = 20,
     dataAcc: List[A] = List.empty,
     warnAcc: Option[List[String]] = None
   ): IO[(List[A], Option[List[String]])] =
@@ -59,12 +65,14 @@ class ScryfallService(client: Client[IO]):
           if (page.warnings.nonEmpty) 
             Some(warnAcc.getOrElse(List.empty) ++ page.warnings.get)
           else warnAcc
-
-        page.nextPage.fold(IO.pure((data, warnings)))(
-          IO.sleep(100.millis) *> pagedScryFallResult[A](_, data, warnings))
+ 
+        if (data.length >= limit)
+          IO.pure((data.take(limit), warnings))
+        else
+          page.nextPage.fold(IO.pure((data, warnings)))(
+            IO.sleep(100.millis) *> pagedScryFallResult[A](_, limit, data, warnings))
       }
     )
-    
 
   protected def scryFallRequest(uri: Uri): Request[IO] =
     Request[IO](

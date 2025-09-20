@@ -8,6 +8,7 @@ enum Color(val ch: Char, val flag: Int):
   case Green extends Color('G', 0b10000)
 
 enum ColorCombo(val colors: Set[Color]):
+  override def toString(): String = colors.map(_.ch).mkString 
   def flags: Int = colors.map(_.flag).fold(0)(_ | _)
 
   case Colorless extends ColorCombo(Set.empty)
@@ -44,6 +45,12 @@ enum ColorCombo(val colors: Set[Color]):
   case Domain extends ColorCombo(Set(Color.White, Color.Blue, Color.Black, Color.Red, Color.Green))
 
 object ColorCombo:
+  lazy val stringMap: Map[String, ColorCombo] =
+    ColorCombo.values.map(cc => cc.toString -> cc).toMap
+
+  lazy val flagMap: Map[Int, ColorCombo] =
+    ColorCombo.values.map(cc => cc.flags -> cc).toMap
+
   def apply(flags: Int): ColorCombo =
     val colors = Color.values.toSet.filter(c => (flags & c.flag) > 0)
     ColorCombo.values.find(_.colors == colors).getOrElse(Colorless)

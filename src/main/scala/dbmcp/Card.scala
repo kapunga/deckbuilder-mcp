@@ -26,7 +26,7 @@ object CardFace:
       } yield s"${p}/${t}"
 
     s"""|${cf.name} - ${cf.manaCost}
-        |${cf.typeLine} - ${cf.typeLine}
+        |${cf.typeLine}
         |---
         |${cf.text}
         |${pt.getOrElse("")}""".stripMargin
@@ -39,7 +39,8 @@ object CardFace:
       manaCost <- c.downField("mana_cost").as[String]
       typeLine <- c.downField("type_line").as[String]
       text <- c.downField("oracle_text").as[String]
-      colors <- c.downField("colors").as[List[String]]
+      colors <- c.downField("colors").as[Option[List[String]]]
+                .map(_.getOrElse(List.empty))
       power <- c.downField("power").as[Option[String]]
       toughness <- c.downField("toughness").as[Option[String]]
     } yield CardFace(
@@ -91,7 +92,8 @@ object Card:
       cardFaces)
 
   def parseFaces(layout: String, hc: HCursor): Decoder.Result[List[CardFace]] =
-    if (layout == "normal")
-      hc.as[CardFace].map(List(_))
-    else
+    if (hc.keys.exists(_.exists(_ == "card_faces")))
       hc.downField("card_faces").as[List[CardFace]]
+    else
+      hc.as[CardFace].map(List(_))
+

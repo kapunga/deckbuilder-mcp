@@ -14,3 +14,8 @@ def lookupByName(name: String, setId: Option[SetId] = None, exact: Boolean = fal
   EmberClientBuilder.default[IO].build.use({ client =>
     ScryfallService(client).findByName(name, setId, exact)  
   }).unsafeRunSync().show
+
+def search(query: String, limit: Int = 20): String =
+  EmberClientBuilder.default[IO].build.use({ client =>
+    ScryfallService(client).search(query, limit)
+  }).unsafeRunSync().map(_.show).mkString("\n\n=======\n\n")

@@ -18,3 +18,6 @@ object ScryfallUris:
 
   def findBySet(setId: SetId, setNum: SetNum): Uri =
     baseUri / "cards" / setId / setNum
+
+  def search(query: String): Uri =
+    baseUri / "cards" / "search" +? ("q", query)
