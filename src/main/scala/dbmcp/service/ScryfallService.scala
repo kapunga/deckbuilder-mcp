@@ -6,11 +6,11 @@ import cats.effect.IO
 import cats.syntax.either._
 import cats.syntax.option._
 import dbmcp.{ Card, SetId, SetNum }
-import io.circe.{Decoder, HCursor}
+import io.circe.{ Decoder, HCursor }
 import org.http4s._
 import org.http4s.circe.CirceEntityDecoder._
 import org.http4s.client._
-import org.http4s.headers.{Accept, `User-Agent`}
+import org.http4s.headers.{ Accept, `User-Agent` }
 
 class ScryfallService(client: Client[IO]):
   val DeckBuilderProductId =

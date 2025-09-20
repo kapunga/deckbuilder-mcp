@@ -27,7 +27,10 @@ class LegalitiesSpec extends FunSuite:
     val legalities = Legalities(formatMap)
 
     assertEquals(legalities.legalityFor(MtgFormat.Commander), Legality.Banned)
-    assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal) // default
+    assertEquals(
+      legalities.legalityFor(MtgFormat.Standard),
+      Legality.Legal
+    ) // default
   }
 
   test("handle mixed legalities correctly") {
@@ -150,7 +153,10 @@ class LegalitiesSpec extends FunSuite:
     val legalities = result.getOrElse(fail("Failed to parse JSON"))
     assertEquals(legalities.legalityFor(MtgFormat.Standard), Legality.Legal)
     assertEquals(legalities.legalityFor(MtgFormat.Modern), Legality.NotLegal)
-    assertEquals(legalities.legalityFor(MtgFormat.Legacy), Legality.Legal) // default
+    assertEquals(
+      legalities.legalityFor(MtgFormat.Legacy),
+      Legality.Legal
+    ) // default
   }
 
   test("handle empty JSON object") {

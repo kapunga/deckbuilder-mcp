@@ -2,7 +2,7 @@ package dbmcp
 
 import cats.Show
 import cats.syntax.show._
-import io.circe.{Decoder, HCursor}
+import io.circe.{ Decoder, HCursor }
 
 case class CardFace(
     faceType: String,
@@ -62,7 +62,8 @@ case class Card(
     layout: String,
     typeLine: String,
     colorIdentity: List[String],
-    cardFaces: List[CardFace]
+    cardFaces: List[CardFace],
+    legalities: Legalities
 )
 
 object Card:
@@ -86,10 +87,19 @@ object Card:
       layout <- h.downField("layout").as[String]
       typeLine <- h.downField("type_line").as[String]
       colorIdentity <- h.downField("color_identity").as[List[String]]
-      cardFaces <- parseFaces(layout, h)
-    } yield Card(scryfallId, name, layout, typeLine, colorIdentity, cardFaces)
+      cardFaces <- parseFaces(h)
+      legalities <- h.downField("legalities").as[Legalities]
+    } yield Card(
+      scryfallId,
+      name,
+      layout,
+      typeLine,
+      colorIdentity,
+      cardFaces,
+      legalities
+    )
 
-  def parseFaces(layout: String, hc: HCursor): Decoder.Result[List[CardFace]] =
+  def parseFaces(hc: HCursor): Decoder.Result[List[CardFace]] =
     if (hc.keys.exists(_.exists(_ == "card_faces")))
       hc.downField("card_faces").as[List[CardFace]]
     else
