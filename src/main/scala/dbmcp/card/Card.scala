@@ -1,7 +1,8 @@
-package dbmcp
+package dbmcp.card
 
 import cats.Show
 import cats.syntax.show._
+import dbmcp.card.Legalities
 import io.circe.{ Decoder, HCursor }
 
 case class CardFace(

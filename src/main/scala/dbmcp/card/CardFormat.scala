@@ -1,6 +1,6 @@
 package dbmcp.card
 
-enum CardFormat(name: String, description: String):
+enum CardFormat(val name: String, val description: String):
   case Normal
       extends CardFormat("normal", "A standard Magic card with one face")
   case Split

@@ -1,5 +1,6 @@
 package dbmcp
 
+import dbmcp.card.Legalities
 import io.circe.parser._
 import munit.FunSuite
 

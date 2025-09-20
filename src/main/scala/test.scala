@@ -2,6 +2,7 @@ import cats.effect.IO
 import cats.effect.unsafe.implicits.global
 import cats.implicits._
 import dbmcp._
+import dbmcp.card.Card
 import dbmcp.service.ScryfallService
 import org.http4s.ember.client.EmberClientBuilder
 
