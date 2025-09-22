@@ -21,12 +21,16 @@
 
 package dbmcp.card
 
-enum Color(val ch: Char, val flag: Int):
-  case White extends Color('W', 0b00001)
-  case Blue extends Color('U', 0b00010)
-  case Black extends Color('B', 0b00100)
-  case Red extends Color('R', 0b01000)
-  case Green extends Color('G', 0b10000)
+enum Color(val ch: Char):
+  case White extends Color('W')
+  case Blue extends Color('U')
+  case Black extends Color('B')
+  case Red extends Color('R')
+  case Green extends Color('G')
+
+object Color:
+  extension (c: Color)
+    def flag: Int = 1 << c.ordinal
 
 enum ColorCombo(val colors: Set[Color]):
   override def toString(): String = colors.map(_.ch).mkString

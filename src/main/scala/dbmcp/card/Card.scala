@@ -78,10 +78,24 @@ object CardFace:
       toughness
     )
 
+enum Rarity(val name: String):
+  case Common extends Rarity("common")
+  case Uncommon extends Rarity("uncommon")
+  case Rare extends Rarity("rare")
+  case Mythic extends Rarity("mythic")
+
+object Rarity:
+  given Decoder[Rarity] = Decoder.decodeString.emap { str =>
+    Rarity.values.find(_.name == str) match
+      case Some(rarity) => Right(rarity)
+      case None => Left(s"Unknown rarity: $str")
+  }
+
 case class Card(
     scryfallId: String,
     name: String,
     layout: String,
+    rarity: Rarity,
     typeLine: String,
     colorIdentity: List[String],
     cardFaces: List[CardFace],
@@ -106,6 +120,7 @@ object Card:
     for {
       scryfallId <- h.downField("id").as[String]
       name <- h.downField("name").as[String]
+      rarity <- h.downField("rarity").as[Rarity]
       layout <- h.downField("layout").as[String]
       typeLine <- h.downField("type_line").as[String]
       colorIdentity <- h.downField("color_identity").as[List[String]]
@@ -115,6 +130,7 @@ object Card:
       scryfallId,
       name,
       layout,
+      rarity,
       typeLine,
       colorIdentity,
       cardFaces,
