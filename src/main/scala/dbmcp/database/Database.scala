@@ -36,26 +36,55 @@ case class Migration(version: Int, scriptName: String, sqlContent: String)
 
 object Database {
 
-  private val dbPath =
-    System.getProperty("user.home") + "/.deckbuilder-mcp/cards.db"
-  private val dbDir =
-    Paths.get(System.getProperty("user.home"), ".deckbuilder-mcp")
-
-  val transactor: Resource[IO, Transactor[IO]] = {
-    ensureDbDirectoryExists()
-
-    Resource.pure(
-      Transactor.fromDriverManager[IO](
-        driver = "org.sqlite.JDBC",
-        url = s"jdbc:sqlite:$dbPath",
-        logHandler = None
-      )
-    )
+  private def resolveDbPath(): String = {
+    Option(System.getenv("DECKBUILDER_DB_PATH"))
+      .getOrElse(System.getProperty("user.home") + "/.deckbuilder-mcp/cards.db")
   }
 
-  private def ensureDbDirectoryExists(): Unit = {
-    if (!Files.exists(dbDir)) {
-      Files.createDirectories(dbDir): Unit
+  private val dbPath = resolveDbPath()
+
+  val transactor: Resource[IO, Transactor[IO]] = {
+    Resource.eval(ensureDbDirectoryExists(dbPath)) *>
+      Resource.pure(
+        Transactor.fromDriverManager[IO](
+          driver = "org.sqlite.JDBC",
+          url = s"jdbc:sqlite:$dbPath",
+          logHandler = None
+        )
+      )
+  }
+
+  private def ensureDbDirectoryExists(dbPath: String): IO[Unit] = {
+    IO {
+      val dbDir = Paths.get(dbPath).getParent
+      val userHome = Paths.get(System.getProperty("user.home"))
+
+      // Check if this is a hidden directory in user home
+      val isHiddenInUserHome = dbDir.startsWith(userHome) &&
+        dbDir.getFileName.toString.startsWith(".")
+
+      (dbDir, isHiddenInUserHome, Files.exists(dbDir))
+    }.flatMap { case (dbDir, isHiddenInUserHome, dirExists) =>
+      if (isHiddenInUserHome) {
+        // Hidden directory in user home - create if needed
+        if (!dirExists) {
+          IO(Files.createDirectories(dbDir)).void
+        } else {
+          IO.unit
+        }
+      } else {
+        // Non-hidden or non-home directory - must exist
+        if (!dirExists) {
+          IO.raiseError(
+            new RuntimeException(
+              s"Database directory does not exist: $dbDir. " +
+                "Please create the directory or use a hidden directory in your home folder."
+            )
+          )
+        } else {
+          IO.unit
+        }
+      }
     }
   }
 
