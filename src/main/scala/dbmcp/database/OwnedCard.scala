@@ -19,22 +19,38 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package dbmcp
+package dbmcp.database
 
-import cats.effect.{ ExitCode, IO, IOApp }
-import ch.linkyard.mcp.jsonrpc2.transport.StdioJsonRpcConnection
-import ch.linkyard.mcp.server.McpServer
-import dbmcp.database.Database
+import doobie._
 
-object DeckBuilderApp extends IOApp:
-  def run(args: List[String]): IO[ExitCode] =
-    for {
-      _ <- Database.initializeOrMigrate()
-      exitCode <- DeckBuilderMcpServer()
-        .start(
-          StdioJsonRpcConnection.create[IO],
-          e => IO(System.err.println(s"Error: $e"))
-        )
-        .useForever
-        .as(ExitCode.Success)
-    } yield exitCode
+sealed trait OwnershipStatus
+
+object OwnershipStatus {
+  case object NotOwned extends OwnershipStatus
+  case object OwnedUnknownQuantity extends OwnershipStatus
+  case class OwnedConfirmedQuantity(count: Int) extends OwnershipStatus
+
+  // Doobie Read/Write instances for encoding/decoding to database
+  implicit val ownershipStatusRead: Read[OwnershipStatus] = {
+    Read[(Boolean, Option[Int])].map {
+      case (false, _)          => NotOwned
+      case (true, None)        => OwnedUnknownQuantity
+      case (true, Some(count)) => OwnedConfirmedQuantity(count)
+    }
+  }
+
+  implicit val ownershipStatusWrite: Write[OwnershipStatus] = {
+    Write[(Boolean, Option[Int])].contramap {
+      case NotOwned                      => (false, None)
+      case OwnedUnknownQuantity          => (true, None)
+      case OwnedConfirmedQuantity(count) => (true, Some(count))
+    }
+  }
+}
+
+case class OwnedCard(
+    setId: String,
+    setNumber: Int,
+    ownership: OwnershipStatus,
+    interested: Boolean
+)

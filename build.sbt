@@ -29,6 +29,8 @@ lazy val root = (project in file("."))
       "ch.linkyard.mcp" %% "mcp-server" % "0.3.2",
       "ch.linkyard.mcp" %% "jsonrpc2-stdio" % "0.3.2",
       "ch.linkyard.mcp" %% "jsonrpc2" % "0.3.2",
+      "org.tpolecat" %% "doobie-core" % "1.0.0-RC4",
+      "org.xerial" % "sqlite-jdbc" % "3.46.1.0",
       "org.slf4j" % "slf4j-nop" % "2.0.16",
       "org.scalameta" %% "munit" % "1.0.3" % Test
     )
