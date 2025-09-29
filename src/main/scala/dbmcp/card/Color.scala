@@ -29,8 +29,7 @@ enum Color(val ch: Char):
   case Green extends Color('G')
 
 object Color:
-  extension (c: Color)
-    def flag: Int = 1 << c.ordinal
+  extension (c: Color) def flag: Int = 1 << c.ordinal
 
 enum ColorCombo(val colors: Set[Color]):
   override def toString(): String = colors.map(_.ch).mkString

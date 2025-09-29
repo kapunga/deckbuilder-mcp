@@ -88,7 +88,7 @@ object Rarity:
   given Decoder[Rarity] = Decoder.decodeString.emap { str =>
     Rarity.values.find(_.name == str) match
       case Some(rarity) => Right(rarity)
-      case None => Left(s"Unknown rarity: $str")
+      case None         => Left(s"Unknown rarity: $str")
   }
 
 case class Card(
